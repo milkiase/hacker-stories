@@ -1,23 +1,23 @@
 import * as React from 'react'
-
-const initialStories = [
-  {
-  title: 'React',
-  url: 'https://reactjs.org/',
-  author: 'Jordan Walke',
-  num_comments: 3,
-  points: 4,
-  objectID: 0,
-  },
-  {
-  title: 'Redux',
-  url: 'https://redux.js.org/',
-  author: 'Dan Abramov, Andrew Clark',
-  num_comments: 2,
-  points: 5,
-  objectID: 1,
-},
-]
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
+// const initialStories = [
+//   {
+//   title: 'React',
+//   url: 'https://reactjs.org/',
+//   author: 'Jordan Walke',
+//   num_comments: 3,
+//   points: 4,
+//   objectID: 0,
+//   },
+//   {
+//   title: 'Redux',
+//   url: 'https://redux.js.org/',
+//   author: 'Dan Abramov, Andrew Clark',
+//   num_comments: 2,
+//   points: 5,
+//   objectID: 1,
+// },
+// ]
 const [storiesFetchInit, storiesFetchSuccess, storiesFetchFail, removeStory] = ['STORIES_FETCH_INIT', 'STORIES_FETCH_SUCCESS', 'STORIES_FETCH_FAIL', 'REMOVE_STORY']
 const storiesReducer = (state, action)=>{
   switch (action.type){
@@ -37,26 +37,33 @@ const App = ()=>{
   const [stories, dispatchStories] = React.useReducer(storiesReducer, {data: [], isLoading: false, isError: false});
   // const [isLoading, setIsLoading] = React.useState(false)
   // const [thereIsError, setThereIsError] = React.useState(false)
-  const getAsyncStories = new Promise((resolve, reject)=>{
-    setTimeout(()=>{
-      resolve({data: {
-        stories: initialStories
-      }})
-      reject()
-    }, 2000)
-  })
+  // const getAsyncStories = new Promise((resolve, reject)=>{
+  //   setTimeout(()=>{
+  //     resolve({data: {
+  //       stories: initialStories
+  //     }})
+  //     reject()
+  //   }, 2000)
+  // })
   React.useEffect(()=>{
     // setIsLoading(true)
     dispatchStories({
       type: storiesFetchInit
     })
-    getAsyncStories.then((response)=>{
+    // getAsyncStories.then((response)=>{
+    //   dispatchStories({
+    //     type : storiesFetchSuccess,
+    //     payload: response.data.stories
+    //   })
+    fetch(`${API_ENDPOINT}react`).then((response)=> response.json())
+      .then((result)=>{
+      // console.log(result.hits)
       dispatchStories({
         type : storiesFetchSuccess,
-        payload: response.data.stories
+        payload: result.hits
       })
-      // setIsLoading(false)
-    }).catch(()=>{
+    }).catch((error)=>{
+      console.log('error', error)
       dispatchStories({
         type: storiesFetchFail
       })
