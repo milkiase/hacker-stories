@@ -35,27 +35,20 @@ const storiesReducer = (state, action)=>{
 }
 const App = ()=>{
   const [stories, dispatchStories] = React.useReducer(storiesReducer, {data: [], isLoading: false, isError: false});
-  // const [isLoading, setIsLoading] = React.useState(false)
-  // const [thereIsError, setThereIsError] = React.useState(false)
-  // const getAsyncStories = new Promise((resolve, reject)=>{
-  //   setTimeout(()=>{
-  //     resolve({data: {
-  //       stories: initialStories
-  //     }})
-  //     reject()
-  //   }, 2000)
-  // })
-  React.useEffect(()=>{
-    // setIsLoading(true)
+  const useStateStorage = (key, initialState)=>{
+    const [value, setValue] = React.useState(localStorage.getItem(key) ?? initialState)
+    React.useEffect(()=>{
+      localStorage.setItem(key, value)
+    }, [value, key])
+    return [value, setValue]
+  }
+  const [searchTerm, searchTermHandler] = useStateStorage('seachTerm', 'React')
+  const handleFetchStories = React.useCallback(()=>{
+    if(!searchTerm) return;
     dispatchStories({
       type: storiesFetchInit
     })
-    // getAsyncStories.then((response)=>{
-    //   dispatchStories({
-    //     type : storiesFetchSuccess,
-    //     payload: response.data.stories
-    //   })
-    fetch(`${API_ENDPOINT}react`).then((response)=> response.json())
+    fetch(`${API_ENDPOINT}${searchTerm}`).then((response)=> response.json())
       .then((result)=>{
       // console.log(result.hits)
       dispatchStories({
@@ -70,16 +63,12 @@ const App = ()=>{
       // setThereIsError(true)
       // setIsLoading(false)
     })
-  }, [])
-  const useStateStorage = (key, initialState)=>{
-    const [value, setValue] = React.useState(localStorage.getItem(key) ?? initialState)
-    React.useEffect(()=>{
-      localStorage.setItem(key, value)
-    }, [value, key])
-    return [value, setValue]
-  }
-  const [searchTerm, searchTermHandler] = useStateStorage('seachTerm', 'React')
-  const searchedStories = stories.data.filter((story)=>story.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  }, [searchTerm])
+  React.useEffect(()=>{
+    handleFetchStories()
+  }, [handleFetchStories])
+  
+  // const searchedStories = stories.data.filter((story)=>story.title.toLowerCase().includes(searchTerm.toLowerCase()))
   
   const handleSearch = (event)=>{
     searchTermHandler(event.target.value)
@@ -98,7 +87,7 @@ const App = ()=>{
             <InputWithText id='search'  onValueChange={handleSearch} value={searchTerm} autoFocus>
               <strong>Search :</strong>
             </InputWithText>
-            <BaseBtn onClick={resetSearchTerm} classValue=' bg-teal-600 rounded-sm ml-3 px-2 py-1'>Reset</BaseBtn>
+            <BaseBtn onClick={resetSearchTerm} classValue=' bg-teal-600 rounded-sm ml-3 px-2 py-1'>Search</BaseBtn>
             {stories.isError && <p className=' text-red-800'>OOops.. there have been some server/network error.</p>}
             {stories.isLoading ? <span className="relative block">
                           <div type="div" className="inline-flex items-center px-4 py-2 font-semibold leading-6 border ml-16 mt-4 rounded-md text-sky-500 bg-white transition ease-in-out duration-150 cursor-not-allowed ring-1 ring-slate-900/10 dark:ring-slate-200/20" >
@@ -108,7 +97,7 @@ const App = ()=>{
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
                           </span>
-                        </span> : <List list={searchedStories} onItemRemove={handleRemoveStory}/>}
+                        </span> : <List list={stories.data} onItemRemove={handleRemoveStory}/>}
         
       </>
 }
