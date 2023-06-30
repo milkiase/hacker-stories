@@ -71,10 +71,11 @@ const App = ()=>{
   const handleSearchInput = (event)=>{
     searchTermHandler(event.target.value)
   }
-  const handleSearchSubmit = ()=>{
+  const handleSearchSubmit = (event)=>{
+    event.preventDefault();
     // searchTermHandler('react')
     if(!searchTerm) return;
-    setUrl(`${API_ENDPOINT}${searchTerm}`)
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
   }
   const handleRemoveStory = (_id)=>{
     dispatchStories({
@@ -84,11 +85,7 @@ const App = ()=>{
   }
   
   return <>
-            <InputWithText id='search'  onValueChange={handleSearchInput} value={searchTerm} autoFocus>
-              <strong>Search :</strong>
-            </InputWithText>
-            <BaseBtn onClick={handleSearchSubmit} disabled={!searchTerm}
-                      classValue=' bg-teal-600 rounded-sm ml-3 px-2 py-1'>Submit</BaseBtn>
+            <SearchForm onSearchSubmit={handleSearchSubmit} onSearchInput={handleSearchInput} searchTerm={searchTerm} />
             {stories.isError && <p className=' text-red-800'>OOops.. there have been some server/network error.</p>}
             {stories.isLoading ? <span className="relative block">
                           <div type="div" className="inline-flex items-center px-4 py-2 font-semibold leading-6 border ml-16 mt-4 rounded-md text-sky-500 bg-white transition ease-in-out duration-150 cursor-not-allowed ring-1 ring-slate-900/10 dark:ring-slate-200/20" >
@@ -143,9 +140,21 @@ const InputWithText = ({id, children, type = 'text', value, onValueChange, autoF
     </>
   );
 }
-const BaseBtn = ({children, onClick, classValue})=>{
+const BaseBtn = ({children, onClick, classValue, type='button'})=>{
   return (
-    <button type="button" onClick={onClick} className={classValue}>{children}</button>
+    <button type={type} onClick={onClick} className={classValue}>{children}</button>
   )
+}
+
+const SearchForm = ({onSearchSubmit, onSearchInput, searchTerm})=>{
+  return (
+    <form onSubmit={onSearchSubmit}>
+      <InputWithText id='search'  onValueChange={onSearchInput} value={searchTerm} autoFocus>
+                <strong>Search :</strong>
+              </InputWithText>
+              <BaseBtn type='submit' disabled={!searchTerm}
+                        classValue=' bg-teal-600 rounded-sm ml-3 px-2 py-1'>Submit</BaseBtn>
+    </form>
+  );
 }
 export default App
