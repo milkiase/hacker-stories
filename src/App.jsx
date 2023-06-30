@@ -1,4 +1,5 @@
 import * as React from 'react'
+import axios from 'axios'
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
 // const initialStories = [
 //   {
@@ -43,38 +44,37 @@ const App = ()=>{
     return [value, setValue]
   }
   const [searchTerm, searchTermHandler] = useStateStorage('seachTerm', 'React')
-  const handleFetchStories = React.useCallback(()=>{
-    if(!searchTerm) return;
+  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`)
+  const handleFetchStories = React.useCallback(async ()=>{
     dispatchStories({
       type: storiesFetchInit
     })
-    fetch(`${API_ENDPOINT}${searchTerm}`).then((response)=> response.json())
-      .then((result)=>{
-      // console.log(result.hits)
+    try {
+      const result = await axios.get(url)
       dispatchStories({
         type : storiesFetchSuccess,
-        payload: result.hits
+        payload: result.data.hits
       })
-    }).catch((error)=>{
-      console.log('error', error)
+    } catch{
       dispatchStories({
         type: storiesFetchFail
       })
-      // setThereIsError(true)
-      // setIsLoading(false)
-    })
-  }, [searchTerm])
+    }
+    
+  }, [url])
   React.useEffect(()=>{
     handleFetchStories()
   }, [handleFetchStories])
   
   // const searchedStories = stories.data.filter((story)=>story.title.toLowerCase().includes(searchTerm.toLowerCase()))
   
-  const handleSearch = (event)=>{
+  const handleSearchInput = (event)=>{
     searchTermHandler(event.target.value)
   }
-  const resetSearchTerm = ()=>{
-    searchTermHandler('react')
+  const handleSearchSubmit = ()=>{
+    // searchTermHandler('react')
+    if(!searchTerm) return;
+    setUrl(`${API_ENDPOINT}${searchTerm}`)
   }
   const handleRemoveStory = (_id)=>{
     dispatchStories({
@@ -84,10 +84,11 @@ const App = ()=>{
   }
   
   return <>
-            <InputWithText id='search'  onValueChange={handleSearch} value={searchTerm} autoFocus>
+            <InputWithText id='search'  onValueChange={handleSearchInput} value={searchTerm} autoFocus>
               <strong>Search :</strong>
             </InputWithText>
-            <BaseBtn onClick={resetSearchTerm} classValue=' bg-teal-600 rounded-sm ml-3 px-2 py-1'>Search</BaseBtn>
+            <BaseBtn onClick={handleSearchSubmit} disabled={!searchTerm}
+                      classValue=' bg-teal-600 rounded-sm ml-3 px-2 py-1'>Submit</BaseBtn>
             {stories.isError && <p className=' text-red-800'>OOops.. there have been some server/network error.</p>}
             {stories.isLoading ? <span className="relative block">
                           <div type="div" className="inline-flex items-center px-4 py-2 font-semibold leading-6 border ml-16 mt-4 rounded-md text-sky-500 bg-white transition ease-in-out duration-150 cursor-not-allowed ring-1 ring-slate-900/10 dark:ring-slate-200/20" >
