@@ -1,24 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import * as React from 'react'
 import axios from 'axios'
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
-// const initialStories = [
-//   {
-//   title: 'React',
-//   url: 'https://reactjs.org/',
-//   author: 'Jordan Walke',
-//   num_comments: 3,
-//   points: 4,
-//   objectID: 0,
-//   },
-//   {
-//   title: 'Redux',
-//   url: 'https://redux.js.org/',
-//   author: 'Dan Abramov, Andrew Clark',
-//   num_comments: 2,
-//   points: 5,
-//   objectID: 1,
-// },
-// ]
+
 const [storiesFetchInit, storiesFetchSuccess, storiesFetchFail, removeStory] = ['STORIES_FETCH_INIT', 'STORIES_FETCH_SUCCESS', 'STORIES_FETCH_FAIL', 'REMOVE_STORY']
 const storiesReducer = (state, action)=>{
   switch (action.type){
@@ -158,3 +142,4 @@ const SearchForm = ({onSearchSubmit, onSearchInput, searchTerm})=>{
   );
 }
 export default App
+export {storiesReducer, List, Item, SearchForm, BaseBtn, InputWithText}
