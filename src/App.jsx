@@ -1,6 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import * as React from 'react'
 import axios from 'axios'
+
+import List from './List'
+import SearchForm from './SearchForm'
+
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
 
 const [storiesFetchInit, storiesFetchSuccess, storiesFetchFail, removeStory] = ['STORIES_FETCH_INIT', 'STORIES_FETCH_SUCCESS', 'STORIES_FETCH_FAIL', 'REMOVE_STORY']
@@ -68,7 +72,7 @@ const App = ()=>{
     })
   }
   
-  return <>
+  return <div className='p-3'>
             <SearchForm onSearchSubmit={handleSearchSubmit} onSearchInput={handleSearchInput} searchTerm={searchTerm} />
             {stories.isError && <p className=' text-red-800'>OOops.. there have been some server/network error.</p>}
             {stories.isLoading ? <span className="relative block">
@@ -81,65 +85,9 @@ const App = ()=>{
                           </span>
                         </span> : <List list={stories.data} onItemRemove={handleRemoveStory}/>}
         
-      </>
+      </div>
 }
 
-const List = ({list, onItemRemove})=>{
-  return (
-    <ul>
-      {
-        list.map((element)=>  <Item key={element.objectID} {...element} onRemoveSelf={onItemRemove}></Item>)
-      }
-    </ul>
-  );
-}
 
-const Item = ({url, title, author, num_comments, points, objectID, onRemoveSelf})=>
-    {
-      return (<div>
-      <li className=" ">
-        <span>
-          <a className=" text-blue-700" href={url} target="_blank" rel="noopener noreferrer">{title}</a>
-          <BaseBtn classValue="px-2 mt-1 mx-3 bg-red-500 hover:bg-red-600 text-white" onClick={()=>onRemoveSelf(objectID)}>X</BaseBtn>
-        </span>
-        <br />Authors: <span>{author} </span>
-        <br />Comments: <span> {num_comments} </span>
-        <br />Points: <span> {points} </span>
-      </li>
-      <hr />
-    </div>)}
-
-const InputWithText = ({id, children, type = 'text', value, onValueChange, autoFocus})=>{
-  const inputRef = React.useRef()
-  React.useEffect(()=>{
-    if(autoFocus && inputRef.current){
-      inputRef.current.focus()
-    }
-  }, [autoFocus])
-  return (
-    <>
-      <label htmlFor={id}>{children} </label>
-      <input onChange={onValueChange} type={type} value={value} id={id} ref={inputRef}
-              className=" px-2 py-1 border rounded-sm border-gray-950"/>
-    </>
-  );
-}
-const BaseBtn = ({children, onClick, classValue, type='button'})=>{
-  return (
-    <button type={type} onClick={onClick} className={classValue}>{children}</button>
-  )
-}
-
-const SearchForm = ({onSearchSubmit, onSearchInput, searchTerm})=>{
-  return (
-    <form onSubmit={onSearchSubmit}>
-      <InputWithText id='search'  onValueChange={onSearchInput} value={searchTerm} autoFocus>
-                <strong>Search :</strong>
-              </InputWithText>
-              <BaseBtn type='submit' disabled={!searchTerm}
-                        classValue=' bg-teal-600 rounded-sm ml-3 px-2 py-1'>Submit</BaseBtn>
-    </form>
-  );
-}
 export default App
-export {storiesReducer, List, Item, SearchForm, BaseBtn, InputWithText}
+export {storiesReducer}

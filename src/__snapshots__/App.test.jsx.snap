@@ -1,0 +1,121 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`List > renders snapshot 1`] = `
+<ul>
+  <div>
+    <li
+      class=" "
+    >
+      <span>
+        <a
+          class=" text-blue-700"
+          href="https://reactjs.org/"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          React
+        </a>
+        <button
+          class="px-2 mt-1 mx-3 bg-red-500 hover:bg-red-600 text-white"
+          type="button"
+        >
+          X
+        </button>
+      </span>
+      <br />
+      Authors: 
+      <span>
+        Jordan Walke
+         
+      </span>
+      <br />
+      Comments: 
+      <span>
+         
+        3
+         
+      </span>
+      <br />
+      Points: 
+      <span>
+         
+        4
+         
+      </span>
+    </li>
+    <hr />
+  </div>
+  <div>
+    <li
+      class=" "
+    >
+      <span>
+        <a
+          class=" text-blue-700"
+          href="https://redux.js.org/"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Redux
+        </a>
+        <button
+          class="px-2 mt-1 mx-3 bg-red-500 hover:bg-red-600 text-white"
+          type="button"
+        >
+          X
+        </button>
+      </span>
+      <br />
+      Authors: 
+      <span>
+        Dan Abramov, Andrew Clark
+         
+      </span>
+      <br />
+      Comments: 
+      <span>
+         
+        2
+         
+      </span>
+      <br />
+      Points: 
+      <span>
+         
+        5
+         
+      </span>
+    </li>
+    <hr />
+  </div>
+</ul>
+`;
+
+exports[`SearchForm > renders snapshots 1`] = `
+<form
+  class="flex"
+>
+  <div>
+    <label
+      for="search"
+    >
+      <strong>
+        Search :
+      </strong>
+       
+    </label>
+    <input
+      class=" px-2 py-1 border rounded-sm border-gray-950"
+      id="search"
+      type="text"
+      value="React"
+    />
+  </div>
+  <button
+    class=" bg-teal-600 text-white rounded-sm ml-3 px-2 py-1 mt-6 mr-10 md:mt-0 md:mr-0"
+    type="submit"
+  >
+    Submit
+  </button>
+</form>
+`;
