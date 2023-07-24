@@ -24,26 +24,26 @@ const storiesReducer = (state, action)=>{
     case storiesFetchInit:
       return {...state, isLoading: true, isError: false}
     case storiesFetchSuccess:
-      return {...state, isLoading: false, isError: false, data: action.payload}
+      return {...state, isLoading: false, isError: false, isSorted: false, data: action.payload}
     case storiesFetchFail:
       return {...state, isLoading: false, isError: true}
     case removeStory:
       return {...state, isLoading: false, isError: false, data: state.data.filter((story)=>story.objectID != action.payload)}
     case 'SORT_STORIES':
       if((state.data.length == 0) || (action.payload.sortBy == 'None')){
-        return {...state}
+        return {...state, isSorted: true}
       }
       if(isNaN(state.data[0][SORT_KEY_MAPPING[action.payload.sortBy]])){
         if(action.payload.sortInDescending){
-          return { ...state, data: sortBy(state.data, SORT_KEY_MAPPING[action.payload.sortBy])}
+          return { ...state, isSorted: true, data: sortBy(state.data, SORT_KEY_MAPPING[action.payload.sortBy])}
         }else{
-          return {...state, data: sortBy(state.data, SORT_KEY_MAPPING[action.payload.sortBy]).reverse()}
+          return {...state, isSorted: true, data: sortBy(state.data, SORT_KEY_MAPPING[action.payload.sortBy]).reverse()}
         }
       }else{
         if(action.payload.sortInDescending){
-          return { ...state, data: sortBy(state.data, SORT_KEY_MAPPING[action.payload.sortBy]).reverse()}
+          return { ...state, isSorted: true, data: sortBy(state.data, SORT_KEY_MAPPING[action.payload.sortBy]).reverse()}
         }else{
-          return {...state, data: sortBy(state.data, SORT_KEY_MAPPING[action.payload.sortBy])}
+          return {...state, isSorted: true, data: sortBy(state.data, SORT_KEY_MAPPING[action.payload.sortBy])}
         }
       }
       
@@ -53,7 +53,7 @@ const storiesReducer = (state, action)=>{
 }
 
 const App = ()=>{
-  const [stories, dispatchStories] = React.useReducer(storiesReducer, {data: [], isLoading: false, isError: false});
+  const [stories, dispatchStories] = React.useReducer(storiesReducer, {data: [], isLoading: false, isError: false, isSorted: false});
   const useStateStorage = (key, initialState)=>{
     const [value, setValue] = React.useState(localStorage.getItem(key) ?? initialState)
     React.useEffect(()=>{
@@ -76,6 +76,7 @@ const App = ()=>{
         type : storiesFetchSuccess,
         payload: result.data.hits
       })
+      
     } catch{
       dispatchStories({
         type: storiesFetchFail
@@ -83,9 +84,20 @@ const App = ()=>{
     }
     
   }, [url])
+  
+  const handleSortStory = React.useCallback(()=>{
+    dispatchStories({
+      type: 'SORT_STORIES',
+      payload: {
+        sortBy: sort.sortBy,
+        sortInDescending: sort.isDescending
+      }
+    })
+  }, [sort.isDescending, sort.sortBy])
+
   React.useEffect(()=>{
     handleFetchStories()
-  }, [handleFetchStories])
+    }, [handleFetchStories])
   
   // const searchedStories = stories.data.filter((story)=>story.title.toLowerCase().includes(searchTerm.toLowerCase()))
   
@@ -105,15 +117,11 @@ const App = ()=>{
     })
   }
 
-  const handleSortStory = React.useCallback(()=>{
-    dispatchStories({
-      type: 'SORT_STORIES',
-      payload: {
-        sortBy: sort.sortBy,
-        sortInDescending: sort.isDescending
-      }
-    })
-  }, [sort.isDescending, sort.sortBy])
+  React.useEffect(()=>{
+    if(!stories.isSorted){
+      handleSortStory()
+    }
+  }, [stories, handleSortStory])
 
   React.useEffect(()=>{
     handleSortStory()
