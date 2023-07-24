@@ -2,11 +2,14 @@ import BaseBtn from "./BaseBtn";
 
 const List = ({list, onItemRemove})=>{
     return (
+      <>
       <ul>
         {
           list.map((element)=>  <Item key={element.objectID} {...element} onRemoveSelf={onItemRemove}></Item>)
         }
       </ul>
+      </>
+      
     );
   }
 

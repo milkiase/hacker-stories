@@ -1,7 +1,7 @@
 import {describe, it, expect, vi} from 'vitest'
-import App, { storiesReducer } from "./App.jsx";
-import SearchForm from './SearchForm.jsx';
-import List, {Item} from './List.jsx';
+import App, { storiesReducer } from "./index.jsx";
+import SearchForm from '../../components/SearchForm.jsx';
+import List, {Item} from '../../components/List.jsx';
 import {
     render,
     screen,
@@ -176,7 +176,7 @@ describe('App', ()=>{
         expect(screen.queryByText(/Loading/)).toBeNull()
         expect(screen.getByText('React')).toBeInTheDocument()
         expect(screen.getByText('Redux')).toBeInTheDocument()
-        expect(screen.getAllByText(/Comments/).length).toBe(2)
+        expect(screen.getAllByText(/Comments:/).length).toBe(2)
     });
     
     it('fails fetching data', async ()=>{
