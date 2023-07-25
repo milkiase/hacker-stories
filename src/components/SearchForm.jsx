@@ -7,7 +7,7 @@ const SearchForm = ({onSearchSubmit, onSearchInput, searchTerm})=>{
           <strong>Search :</strong>
         </InputWithText>
         <BaseBtn type='submit' disabled={!searchTerm}
-          classValue=' bg-teal-600 text-white rounded-sm ml-3 px-2 py-1 mt-6 mr-10 md:mt-0 md:mr-0'>Submit</BaseBtn>
+          classValue=' bg-teal-600 text-white rounded-sm ml-3 px-2 py-1 max-[405px]:mt-6 mr-10 md:mr-0'>Submit</BaseBtn>
       </form>
     );
   }

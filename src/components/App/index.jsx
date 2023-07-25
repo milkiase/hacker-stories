@@ -7,6 +7,7 @@ import List from '../List'
 import SearchForm from '../SearchForm'
 import Options from "../Options";
 import Switch from '../Switch';
+import SearchHistory from '../../SearchHistory'
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query='
 const SORT_KEY_MAPPING = {
@@ -51,7 +52,8 @@ const storiesReducer = (state, action)=>{
       throw new Error()
   }
 }
-
+const getUrl = (searchTerm)=>`${API_ENDPOINT}${searchTerm}`
+const getActiveUrl = (urls)=>urls[urls.length - 1]
 const App = ()=>{
   const [stories, dispatchStories] = React.useReducer(storiesReducer, {data: [], isLoading: false, isError: false, isSorted: false});
   const useStateStorage = (key, initialState)=>{
@@ -62,28 +64,31 @@ const App = ()=>{
     return [value, setValue]
   }
   const [searchTerm, searchTermHandler] = useStateStorage('seachTerm', 'React')
-  const [url, setUrl] = React.useState(`${API_ENDPOINT}${searchTerm}`)
-  // const [sort.isDescending, setIsDescending] = React.useState(true)
+  const [urls, setUrls] = React.useState([getUrl(searchTerm)])
   const [sort, setSort] = React.useState({sortBy: 'None', isDescending: true})
-  // const [sort.sortBy, setSortBy] = React.useState('None')
+
+  const extractSearchTerm = (url)=> url.replace(API_ENDPOINT, '')
+  const getRecentSearches = ()=>{
+    let recent = urls.slice(-6, -1)
+    return recent.map(extractSearchTerm).reverse()
+  }
   const handleFetchStories = React.useCallback(async ()=>{
     dispatchStories({
       type: storiesFetchInit
     })
     try {
-      const result = await axios.get(url)
+      const result = await axios.get(getActiveUrl(urls))
       dispatchStories({
         type : storiesFetchSuccess,
         payload: result.data.hits
       })
-      
     } catch{
       dispatchStories({
         type: storiesFetchFail
       })
     }
     
-  }, [url])
+  }, [urls])
   
   const handleSortStory = React.useCallback(()=>{
     dispatchStories({
@@ -97,18 +102,19 @@ const App = ()=>{
 
   React.useEffect(()=>{
     handleFetchStories()
-    }, [handleFetchStories])
-  
-  // const searchedStories = stories.data.filter((story)=>story.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  }, [handleFetchStories])
   
   const handleSearchInput = (event)=>{
     searchTermHandler(event.target.value)
   }
+  const handleSearch = (event, value)=>{
+    event.preventDefault();    
+    let newUrl = getUrl(value)
+    if(!value || (newUrl == getActiveUrl(urls))) return;
+    setUrls(urls.concat(newUrl));
+  }
   const handleSearchSubmit = (event)=>{
-    event.preventDefault();
-    // searchTermHandler('react')
-    if(!searchTerm) return;
-    setUrl(`${API_ENDPOINT}${searchTerm}`);
+    handleSearch(event, searchTerm)
   }
   const handleRemoveStory = (_id)=>{
     dispatchStories({
@@ -126,10 +132,18 @@ const App = ()=>{
   React.useEffect(()=>{
     handleSortStory()
   }, [handleSortStory])
+
+  const handleHistoryClick = (event)=>{
+    searchTermHandler(event.target.value)
+    handleSearch(event, event.target.value)
+  }
   
   return <div className='p-3'>
             <div className="flex flex-col gap-5 pb-4 border-b">
+            <div className="flex flex-wrap gap-1">
               <SearchForm onSearchSubmit={handleSearchSubmit} onSearchInput={handleSearchInput} searchTerm={searchTerm} />
+              <SearchHistory searchHistory={getRecentSearches()} onHistoryClicked={handleHistoryClick}></SearchHistory>
+            </div>
               <div className="flex align-top text-xs">
                 <Options options={['None', 'Title', 'Author', 'Comments', 'Points']} onOptionChange={(value)=>{setSort({sortBy: value, isDescending: sort.isDescending})}}></Options>
                 {(sort.sortBy != 'None') && <Switch switchOn={sort.isDescending} onSwitchToggle={()=>{ setSort({sortBy: sort.sortBy, isDescending: !sort.isDescending}) }}></Switch>}

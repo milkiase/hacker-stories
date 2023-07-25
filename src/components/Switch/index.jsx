@@ -1,5 +1,4 @@
 import './style.css'
-
 const Switch = ({onSwitchToggle, switchOn})=>{
     return (
         <>
