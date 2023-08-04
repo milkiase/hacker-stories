@@ -3,6 +3,8 @@ import * as React from 'react'
 import axios from 'axios'
 import { sortBy } from 'lodash'
 
+import './App.style.css'
+
 import List from '../List'
 import SearchForm from '../SearchForm'
 import Options from "../Options";
@@ -47,7 +49,8 @@ const storiesReducer = (state, action)=>{
           return {...state, isSorted: true, data: sortBy(state.data, SORT_KEY_MAPPING[action.payload.sortBy])}
         }
       }
-      
+    case 'MORE_STORIES':
+      return {...state, data: [...state.data, ...action.payload]}
     default:
       throw new Error()
   }
@@ -66,6 +69,7 @@ const App = ()=>{
   const [searchTerm, searchTermHandler] = useStateStorage('seachTerm', 'React')
   const [urls, setUrls] = React.useState([getUrl(searchTerm)])
   const [sort, setSort] = React.useState({sortBy: 'None', isDescending: true})
+  const [pagination, setPagination] = React.useState({page: 0, nbPages: 0, fetchingMore: false})
 
   const extractSearchTerm = (url)=> url.replace(API_ENDPOINT, '')
   const getRecentSearches = ()=>{
@@ -82,6 +86,8 @@ const App = ()=>{
         type : storiesFetchSuccess,
         payload: result.data.hits
       })
+      console.log(result)
+      setPagination({page: result.data.page, nbPages: result.data.nbPages, fetchingMore: false})
     } catch{
       dispatchStories({
         type: storiesFetchFail
@@ -137,7 +143,19 @@ const App = ()=>{
     searchTermHandler(event.target.value)
     handleSearch(event, event.target.value)
   }
-  
+  const fetchMoreStories = async()=>{
+    console.log('more')
+    if((pagination.nbPages > pagination.page + 1) && (!pagination.fetchingMore)){
+      try{
+        setPagination({...pagination, fetchingMore: true})
+        const result = await axios.get(getActiveUrl(urls) + `&page=${pagination.page + 1}`)
+        dispatchStories({ type: 'MORE_STORIES', payload: result.data.hits})
+        setPagination({page: result.data.page, nbPages: result.data.nbPages, fetchingMore:false})
+      }catch{
+        console.log('sorry, error occured while fetching more stories')
+      }
+    }
+  }
   return <div className='p-3'>
             <div className="flex flex-col gap-5 pb-4 border-b">
             <div className="flex flex-wrap gap-1">
@@ -159,12 +177,22 @@ const App = ()=>{
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
                           </span>
                         </span> : (
-                          <List list={stories.data} onItemRemove={handleRemoveStory}/>
+                          <div>
+                            <List list={stories.data} onItemRemove={handleRemoveStory}/>
+                            { pagination.page + 1 < pagination.nbPages && 
+                              <button className="cta flex" onClick={fetchMoreStories}>
+                                <span>{pagination.fetchingMore? 'please wait..' : 'More'}</span>
+                                <svg viewBox="0 0 13 10" height="10px" width="15px">
+                                  <path d="M1,5 L11,5"></path>
+                                  <polyline points="8 1 12 5 8 9"></polyline>
+                                </svg>
+                              </button>
+                            }
+                          </div>
                         )}
         
       </div>
 }
-
 
 export default App
 export {storiesReducer}
