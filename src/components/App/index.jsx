@@ -69,7 +69,7 @@ const App = ()=>{
   const [searchTerm, searchTermHandler] = useStateStorage('seachTerm', 'React')
   const [urls, setUrls] = React.useState([getUrl(searchTerm)])
   const [sort, setSort] = React.useState({sortBy: 'None', isDescending: true})
-  const [pagination, setPagination] = React.useState({page: 0, nbPages: 0, fetchingMore: false})
+  const [pagination, setPagination] = React.useState({page: 0, nbPages: 0, fetchingMore: false, hasMore: false})
 
   const extractSearchTerm = (url)=> url.replace(API_ENDPOINT, '')
   const getRecentSearches = ()=>{
@@ -87,7 +87,7 @@ const App = ()=>{
         payload: result.data.hits
       })
       console.log(result)
-      setPagination({page: result.data.page, nbPages: result.data.nbPages, fetchingMore: false})
+      setPagination({page: result.data.page, nbPages: result.data.nbPages, fetchingMore: false, hasMore:(result.data.nbPages > result.data.page + 1)})
     } catch{
       dispatchStories({
         type: storiesFetchFail
@@ -146,12 +146,12 @@ const App = ()=>{
   const observerTarget = React.useRef()
   const handleScroll = React.useCallback(async()=>{
     console.log('handling scroll')
-    if((pagination.nbPages > pagination.page + 1) && (!pagination.fetchingMore)){
+    if( pagination.hasMore && (!pagination.fetchingMore)){
       try{
-        setPagination({...(pagination=>pagination), fetchingMore: true})
+        setPagination({...pagination, fetchingMore: true})
         const result = await axios.get(getActiveUrl(urls) + `&page=${pagination.page + 1}`)
         dispatchStories({ type: 'MORE_STORIES', payload: result.data.hits})
-        setPagination({page: result.data.page, nbPages: result.data.nbPages, fetchingMore:false})
+        setPagination({page: result.data.page, nbPages: result.data.nbPages, fetchingMore:false, hasMore: (pagination.nbPages > pagination.page + 1)})
       }catch{
         console.log('sorry, error occured while fetching more stories')
       }
@@ -191,7 +191,7 @@ const App = ()=>{
                         </span> : (
                           <div>
                             <List list={stories.data} onItemRemove={handleRemoveStory}/>
-                            { pagination.page + 1 < pagination.nbPages && 
+                            { pagination.hasMore && 
                               <button className="cta flex" onClick={handleScroll} ref={observerTarget}>
                                 <span>{pagination.fetchingMore? 'loading more..' : 'More'}</span>
                                 <svg viewBox="0 0 13 10" height="10px" width="15px">
