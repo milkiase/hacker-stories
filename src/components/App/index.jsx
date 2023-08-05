@@ -143,11 +143,12 @@ const App = ()=>{
     searchTermHandler(event.target.value)
     handleSearch(event, event.target.value)
   }
-  const fetchMoreStories = async()=>{
-    console.log('more')
+  const observerTarget = React.useRef()
+  const handleScroll = React.useCallback(async()=>{
+    console.log('handling scroll')
     if((pagination.nbPages > pagination.page + 1) && (!pagination.fetchingMore)){
       try{
-        setPagination({...pagination, fetchingMore: true})
+        setPagination({...(pagination=>pagination), fetchingMore: true})
         const result = await axios.get(getActiveUrl(urls) + `&page=${pagination.page + 1}`)
         dispatchStories({ type: 'MORE_STORIES', payload: result.data.hits})
         setPagination({page: result.data.page, nbPages: result.data.nbPages, fetchingMore:false})
@@ -155,7 +156,18 @@ const App = ()=>{
         console.log('sorry, error occured while fetching more stories')
       }
     }
-  }
+  }, [urls, pagination])
+  React.useEffect(()=>{
+    const observer = new IntersectionObserver((entries)=>{
+      if(entries[0].isIntersecting) handleScroll()
+    })
+    let currentRef = observerTarget.current
+    if(currentRef) observer.observe(currentRef)
+
+    return ()=>{
+      if(currentRef) observer.unobserve(currentRef)
+    }
+  },[handleScroll] )
   return <div className='p-3'>
             <div className="flex flex-col gap-5 pb-4 border-b">
             <div className="flex flex-wrap gap-1">
@@ -180,8 +192,8 @@ const App = ()=>{
                           <div>
                             <List list={stories.data} onItemRemove={handleRemoveStory}/>
                             { pagination.page + 1 < pagination.nbPages && 
-                              <button className="cta flex" onClick={fetchMoreStories}>
-                                <span>{pagination.fetchingMore? 'please wait..' : 'More'}</span>
+                              <button className="cta flex" onClick={handleScroll} ref={observerTarget}>
+                                <span>{pagination.fetchingMore? 'loading more..' : 'More'}</span>
                                 <svg viewBox="0 0 13 10" height="10px" width="15px">
                                   <path d="M1,5 L11,5"></path>
                                   <polyline points="8 1 12 5 8 9"></polyline>
@@ -190,7 +202,6 @@ const App = ()=>{
                             }
                           </div>
                         )}
-        
       </div>
 }
 
