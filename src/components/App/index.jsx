@@ -71,6 +71,24 @@ const App = ()=>{
   const [sort, setSort] = React.useState({sortBy: 'None', isDescending: true})
   const [pagination, setPagination] = React.useState({page: 0, nbPages: 0, fetchingMore: false, hasMore: false})
 
+  const sortedStories = ()=>{
+    if((stories.data.length == 0) || (sort.sortBy == 'None')){
+      return stories.data
+    }
+    if(isNaN(stories.data[0][SORT_KEY_MAPPING[sort.sortBy]])){
+      if(sort.isDescending){
+        return sortBy(stories.data, SORT_KEY_MAPPING[sort.sortBy])
+      }else{
+        return sortBy(stories.data, SORT_KEY_MAPPING[sort.sortBy]).reverse()
+      }
+    }else{
+      if(sort.isDescending){
+        return sortBy(stories.data, SORT_KEY_MAPPING[sort.sortBy]).reverse()
+      }else{
+        return sortBy(stories.data, SORT_KEY_MAPPING[sort.sortBy])
+      }
+    }
+  }
   const extractSearchTerm = (url)=> url.replace(API_ENDPOINT, '')
   const getRecentSearches = ()=>{
     let recent = urls.slice(-6, -1)
@@ -86,7 +104,7 @@ const App = ()=>{
         type : storiesFetchSuccess,
         payload: result.data.hits
       })
-      console.log(result)
+      // console.log(result)
       setPagination({page: result.data.page, nbPages: result.data.nbPages, fetchingMore: false, hasMore:(result.data.nbPages > result.data.page + 1)})
     } catch{
       dispatchStories({
@@ -96,15 +114,6 @@ const App = ()=>{
     
   }, [urls])
   
-  const handleSortStory = React.useCallback(()=>{
-    dispatchStories({
-      type: 'SORT_STORIES',
-      payload: {
-        sortBy: sort.sortBy,
-        sortInDescending: sort.isDescending
-      }
-    })
-  }, [sort.isDescending, sort.sortBy])
 
   React.useEffect(()=>{
     handleFetchStories()
@@ -129,23 +138,12 @@ const App = ()=>{
     })
   }
 
-  React.useEffect(()=>{
-    if(!stories.isSorted){
-      handleSortStory()
-    }
-  }, [stories, handleSortStory])
-
-  React.useEffect(()=>{
-    handleSortStory()
-  }, [handleSortStory])
-
   const handleHistoryClick = (event)=>{
     searchTermHandler(event.target.value)
     handleSearch(event, event.target.value)
   }
   const observerTarget = React.useRef()
   const handleScroll = React.useCallback(async()=>{
-    console.log('handling scroll')
     if( pagination.hasMore && (!pagination.fetchingMore)){
       try{
         setPagination({...pagination, fetchingMore: true})
@@ -153,13 +151,13 @@ const App = ()=>{
         dispatchStories({ type: 'MORE_STORIES', payload: result.data.hits})
         setPagination({page: result.data.page, nbPages: result.data.nbPages, fetchingMore:false, hasMore: (pagination.nbPages > pagination.page + 1)})
       }catch{
-        console.log('sorry, error occured while fetching more stories')
+        // console.log('sorry, error occured while fetching more stories')
       }
     }
   }, [urls, pagination])
   React.useEffect(()=>{
     const observer = new IntersectionObserver((entries)=>{
-      if(entries[0].isIntersecting) handleScroll()
+      if(entries[0].isIntersecting && sort.sortBy=='None') handleScroll()
     })
     let currentRef = observerTarget.current
     if(currentRef) observer.observe(currentRef)
@@ -167,7 +165,7 @@ const App = ()=>{
     return ()=>{
       if(currentRef) observer.unobserve(currentRef)
     }
-  },[handleScroll] )
+  },[handleScroll, sort] )
   return <div className='p-3'>
             <div className="flex flex-col gap-5 pb-4 border-b">
             <div className="flex flex-wrap gap-1">
@@ -184,13 +182,13 @@ const App = ()=>{
                           <div type="div" className="inline-flex items-center px-4 py-2 font-semibold leading-6 border ml-16 mt-4 rounded-md text-sky-500 bg-white transition ease-in-out duration-150 cursor-not-allowed ring-1 ring-slate-900/10 dark:ring-slate-200/20" >
                             Loading stories...
                           </div>
-                          <span className="flex absolute h-3 w-3 top-0 right-0 mt-3 -mr-1">
+                          <span className="flex absolute h-3 w-3 top-0 right-0 mt-3">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
                           </span>
                         </span> : (
                           <div>
-                            <List list={stories.data} onItemRemove={handleRemoveStory}/>
+                            <List list={sortedStories()} onItemRemove={handleRemoveStory}/>
                             { pagination.hasMore && 
                               <button className="cta flex" onClick={handleScroll} ref={observerTarget}>
                                 <span>{pagination.fetchingMore? 'loading more..' : 'More'}</span>
